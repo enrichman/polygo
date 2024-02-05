@@ -7,52 +7,66 @@ import (
 	"github.com/enrichman/polygo"
 )
 
-type Shape struct {
-	Type string `json:"type"`
-	Area float32
+type Type interface {
+	GetType() string
+}
+
+type Shape interface {
+	Area() float32
+}
+
+type TypedShape struct {
+	Type  string `json:"type"`
+	Color string `json:"color"`
+}
+
+func (t *TypedShape) GetType() string {
+	return t.Type
 }
 
 type Circle struct {
-	Shape
+	TypedShape
 	Radius float32
 }
 
 type Square struct {
-	Shape
+	TypedShape
 	Side float32
 }
 
-func Test_UnmarshalArray(t *testing.T) {
+func Test_UnmarshalObject(t *testing.T) {
 	tt := []struct {
-		name string
-		json string
+		name        string
+		json        []byte
+		expectedObj any
 	}{
 		{
 			name: "",
-			json: `[
-				{ "type": "truck", "name": "my truck" },
-				{ "type": "car", "name": "my truck" }
-			]`,
-		},
-		{
-			name: "non existing",
-			json: `[
-				{ "type": "truck", "name": "my truck" }
-			]`,
+			json: []byte(`{
+				"type": "circle",
+				"color": "red"
+			}`),
+			expectedObj: &Circle{
+				TypedShape: TypedShape{
+					Type:  "circle",
+					Color: "red",
+				},
+				Radius: 5,
+			},
 		},
 	}
 
-	decoder := polygo.NewDecoder[Shape]("type").
+	decoder := polygo.NewDecoder[Type]("type").
 		Register("circle", Circle{}).
 		Register("square", Square{})
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			shapes, err := decoder.UnmarshalArray([]byte(tc.json))
+			shape, err := decoder.UnmarshalObject(tc.json)
 			if err != nil {
 				t.Fatal(err)
 			}
-			fmt.Println(shapes[0].Area)
+			fmt.Println(shape.GetType())
 		})
 	}
 }
