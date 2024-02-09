@@ -3,6 +3,7 @@ package polygo
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 
 	"github.com/tidwall/gjson"
@@ -86,12 +87,12 @@ func (d *Decoder[T]) unmarshalObject(path string, res gjson.Result) (T, error) {
 	fieldValue := res.Get(d.FieldName).String()
 	// TODO check if string
 	if fieldValue == "" {
-		return zero, errors.New("field value not set")
+		return zero, fmt.Errorf("field '%s' not found", d.FieldName)
 	}
 
 	matchedType, found := d.TypeMap[fieldValue]
 	if !found {
-		return zero, errors.New("type not registered")
+		return zero, fmt.Errorf("type '%s' not registered", fieldValue)
 	}
 
 	var v reflect.Value
