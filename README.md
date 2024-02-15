@@ -4,10 +4,11 @@ Decode polymorphic JSON response in a breeze with Go!
 
 ## Example
 
-Sometimes you have to deal with APIs that return different kind of objects, usually distinguished by a field (the `type` field in the following example):
+Sometimes you have to deal with APIs that return different kind of objects, usually distinguished by a field.  
+
+In the following example the `/v1/shapes` endpoint returns a list of _shapes_, with the `type` defining the type of object:
 
 ```json
-// the /v1/shapes returns a JSON array of shapes
 [
 	{ "type": "circle", "radius": 5 },
 	{ "type": "square", "side": 3 }
