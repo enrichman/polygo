@@ -1,37 +1,49 @@
 package polygo_test
 
 import (
+	"encoding/json"
+	"math"
 	"testing"
 
 	"github.com/enrichman/polygo"
 	"github.com/stretchr/testify/assert"
 )
 
-type Type interface {
-	GetType() string
-}
-
 type Shape interface {
-	Area() float32
-}
-
-type ColouredShape struct {
-	Type  string `json:"type"`
-	Color string `json:"color"`
-}
-
-func (t *ColouredShape) GetType() string {
-	return t.Type
+	GetType() string
+	Area() float64
 }
 
 type Circle struct {
-	ColouredShape
-	Radius float32 `json:"radius"`
+	Type   string  `json:"type"`
+	Radius float64 `json:"radius"`
+}
+
+func NewCircle(radius float64) *Circle {
+	return &Circle{Type: "circle", Radius: radius}
+}
+
+func (c *Circle) GetType() string {
+	return c.Type
+}
+
+func (c *Circle) Area() float64 {
+	return math.Phi * math.Pow(c.Radius, 2)
 }
 
 type Square struct {
-	ColouredShape
-	Side float32
+	Type string  `json:"type"`
+	Side float64 `json:"side"`
+}
+
+func NewSquare(side float64) *Square {
+	return &Square{Type: "square", Side: side}
+}
+
+func (s *Square) GetType() string { return s.Type }
+
+func (s *Square) Area() float64 {
+	return math.Pow(s.Side, 2)
 }
 
 func Test_UnmarshalObject(t *testing.T) {
@@ -45,16 +57,9 @@ func Test_UnmarshalObject(t *testing.T) {
 			name: "simple circle",
 			json: []byte(`{
 				"type": "circle",
-				"color": "red",
 				"radius": 5
 			}`),
-			expectedObj: &Circle{
-				ColouredShape: ColouredShape{
-					Type:  "circle",
-					Color: "red",
-				},
-				Radius: 5,
-			},
+			expectedObj: NewCircle(5),
 		},
 		{
 			name: "unknown type",
@@ -69,14 +74,13 @@ func Test_UnmarshalObject(t *testing.T) {
 			name: "field not present",
 			json: []byte(`{
 				"no-type": "circle",
-				"color": "red",
 				"radius": 5
 			}`),
 			expectedErr: "field 'type' not found",
 		},
 	}
 
-	decoder := polygo.NewDecoder[Type]("type").
+	decoder := polygo.NewDecoder[Shape]("type").
 		Register("circle", Circle{}).
 		Register("square", Square{})
 
@@ -103,22 +107,18 @@ func Test_UnmarshalArray(t *testing.T) {
 	}{
 		{
 			name: "simple array",
-			json: []byte(`[{
-				"type": "circle",
-				"color": "red",
-				"radius": 5
-			}]`),
-			expectedObj: []Type{&Circle{
-				ColouredShape: ColouredShape{
-					Type:  "circle",
-					Color: "red",
-				},
-				Radius: 5,
-			}},
+			json: []byte(`[
+				{ "type": "circle", "radius": 5 },
+				{ "type": "square", "side": 3 }
+			]`),
+			expectedObj: []Shape{
+				NewCircle(5),
+				NewSquare(3),
+			},
 		},
 	}
 
-	decoder := polygo.NewDecoder[Type]("type").
+	decoder := polygo.NewDecoder[Shape]("type").
 		Register("circle", Circle{}).
 		Register("square", Square{})
 
@@ -134,4 +134,79 @@ func Test_UnmarshalArray(t *testing.T) {
 			assert.Equal(t, tc.expectedObj, shape)
 		})
 	}
+}
+
+func Test_UnmarshalInnerArray(t *testing.T) {
+	tt := []struct {
+		name        string
+		json        []byte
+		path        string
+		expectedObj any
+		expectedErr string
+	}{
+		{
+			name: "simple data response",
+			json: []byte(`{
+				"data": [
+					{ "type": "circle", "radius": 5 },
+					{ "type": "square", "side": 3 }
+				]
+			}`),
+			path: "data",
+			expectedObj: []Shape{
+				NewCircle(5),
+				NewSquare(3),
+			},
+		},
+	}
+
+	decoder := polygo.NewDecoder[Shape]("type").
+		Register("circle", Circle{}).
+		Register("square", Square{})
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			shape, err := decoder.UnmarshalInnerArray(tc.path, tc.json)
+
+			if tc.expectedErr != "" {
+				assert.EqualError(t, err, tc.expectedErr)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, tc.expectedObj, shape)
+		})
+	}
+}
+
+func Test_UnmarshalInnerArrayInResponse(t *testing.T) {
+	type Response struct {
+		Message string          `json:"message"`
+		Data    json.RawMessage `json:"data"`
+	}
+
+	jsonData := []byte(`{
+		"message": "response returned",
+		"data": [
+			{ "type": "circle", "radius": 5 },
+			{ "type": "square", "side": 3 }
+		]
+	}`)
+
+	decoder := polygo.NewDecoder[Shape]("type").
+		Register("circle", &Circle{}).
+		Register("square", Square{})
+
+	var resp Response
+	err := json.Unmarshal(jsonData, &resp)
+	assert.NoError(t, err)
+	assert.Equal(t, "response returned", resp.Message)
+
+	shapes, err := decoder.UnmarshalArray(resp.Data)
+	assert.NoError(t, err)
+
+	expectedObj := []Shape{
+		NewCircle(5),
+		NewSquare(3),
+	}
+	assert.Equal(t, expectedObj, shapes)
 }
