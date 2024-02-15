@@ -124,14 +124,14 @@ func Test_UnmarshalArray(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			shape, err := decoder.UnmarshalArray(tc.json)
+			shapes, err := decoder.UnmarshalArray(tc.json)
 
 			if tc.expectedErr != "" {
 				assert.EqualError(t, err, tc.expectedErr)
 			} else {
 				assert.NoError(t, err)
 			}
-			assert.Equal(t, tc.expectedObj, shape)
+			assert.Equal(t, tc.expectedObj, shapes)
 		})
 	}
 }
