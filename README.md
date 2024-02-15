@@ -17,16 +17,13 @@ In the following example the `/v1/shapes` endpoint returns a list of _shapes_, w
 
 There are different ways on how to handle this, but with `polygo` you can just map your types in a common interface.
 
-Create a decoder specifying the interface and the field name. Then register the field value with the concrete type:
+Create a decoder specifying the interface and the field name, register the concrete types, and unmarshal the JSON:
 ```go
 // register your concrete types defined in a common interface
 decoder := polygo.NewDecoder[Shape]("type").
     Register("circle", Circle{}).
     Register("square", Square{})
-```
 
-Finally unmarshal the JSON, and interact with the returned interface, or the concrete types, if needed:
-```go
 // unmarshal your JSON
 shapes, _ := decoder.UnmarshalArray(jsonBytes)
 
@@ -34,7 +31,7 @@ for _, shape := range shapes {
     // use the methods defined by the interface
     fmt.Printf("shape area: %v\n", shape.Area())
 
-    // or check the concrete type
+    // or check the concrete type if needed
     switch s := shape.(type) {
     case *Circle:
         fmt.Printf("circle radius: %v\n", s.Radius)
