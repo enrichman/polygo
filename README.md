@@ -1,12 +1,12 @@
 # Polygo
 
-Decode polymorphic JSON response in a breeze with Go!
+Decode polymorphic JSON response in a breeze!
 
 ## Example
 
 Sometimes you have to deal with APIs that return different kind of objects, usually distinguished by a field.  
 
-In the following example the `/v1/shapes` endpoint returns a list of _shapes_, with the `type` defining the type of object:
+In the following example the `/v1/shapes` endpoint returns a list of _shapes_, with the `type` defining the type of the object:
 
 ```json
 [
@@ -87,16 +87,16 @@ if err != nil {
 }
 ```
 
-### UnmarshalInnerObjbect
+### UnmarshalInnerObject
 
-`UnmarshalInnerObjbect` will unmarshal an object, looking into the specified path (using the [github.com/tidwall/gjson](github.com/tidwall/gjson) library).
+`UnmarshalInnerObject` will unmarshal an object, looking into the specified path (using the [github.com/tidwall/gjson](github.com/tidwall/gjson) library).
 
 ```go
 jsonBody := []byte(`{
     "data": { "type": "circle", "radius": 5 }
 }`)
 
-shapes, err := decoder.UnmarshalInnerObjbect("data", jsonBody)
+shapes, err := decoder.UnmarshalInnerObject("data", jsonBody)
 if err != nil {
     return err
 }
