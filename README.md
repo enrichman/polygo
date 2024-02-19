@@ -1,25 +1,35 @@
 # Polygo
 
-Decode polymorphic JSON response in a breeze!
+Polygo is a lightweight Go package for decoding polymorphic JSON responses effortlessly.
+
+Dealing with APIs that return various types of objects can be challenging. Polygo simplifies this process by allowing you to map your types into a common interface.
 
 ## Example
 
-Sometimes you have to deal with APIs that return different kind of objects, usually distinguished by a field.  
-
-In the following example the `/v1/shapes` endpoint returns a list of _shapes_, with the `type` defining the type of the object:
+Consider an API endpoint `/v1/shapes` that returns a list of _shapes_, each defined by a type field:
 
 ```json
 [
-	{ "type": "circle", "radius": 5 },
-	{ "type": "square", "side": 3 }
+    { "type": "circle", "radius": 5 },
+    { "type": "square", "side":   3 }
 ]
 ```
 
-There are different ways on how to handle this, but with `polygo` you can just map your types in a common interface.
+With Polygo, you can easily handle this polymorphic JSON response. Here's how.
 
-Create a decoder specifying the interface and the field name, register the concrete types, and unmarshal the JSON:
+1. **Create a Decoder:** Initialize a decoder with a common interface and the field name used to check the object type.
+2. **Register Types:** Register your concrete types with the decoder.
+3. **Unmarshal JSON:** Use one of the available functions to unmarshal your JSON data.
+
+
 ```go
-// register your concrete types defined in a common interface
+// Define your shape interface
+type Shape interface {
+    Area() float64
+}
+
+// Create a decoder specifying the interface and the field name,
+// and register your concrete types
 decoder := polygo.NewDecoder[Shape]("type").
     Register("circle", Circle{}).
     Register("square", Square{})
@@ -41,22 +51,7 @@ for _, shape := range shapes {
 }
 ```
 
-## Usage
-
-Create a decoder with a common interface and the field name used to check the object type.   You can then register your types:
-
-
-```go
-type Shape interface {
-    Area() float64
-}
-
-decoder := polygo.NewDecoder[Shape]("type").
-    Register("circle", Circle{}).
-    Register("square", Square{})
-```
-
-Then unmarshal your JSON with one of the available functions.
+## Available functions
 
 ### UnmarshalObject
 
@@ -153,3 +148,22 @@ if err != nil {
     return err
 }
 ```
+
+## Installation
+To use Polygo in your Go project, simply import it:
+
+```go
+import "github.com/enrichman/polygo"
+```
+
+## Contributing
+
+Contributions are welcome! Feel free to open issues or pull requests on GitHub.
+
+## License
+
+[MIT](https://github.com/enrichman/polygo/blob/main/LICENSE)
+
+## Feedback
+
+If you like the project please star it on Github 🌟, and feel free to drop me a note on [Twitter](https://twitter.com/enrichmann)https://twitter.com/enrichmann, or open an issue!
