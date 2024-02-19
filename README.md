@@ -2,7 +2,8 @@
 
 Polygo is a lightweight Go package for decoding polymorphic JSON responses effortlessly.
 
-Dealing with APIs that return various types of objects can be challenging. Polygo simplifies this process by allowing you to map your types into a common interface.
+Dealing with APIs that return various types of objects can be challenging.  
+Polygo simplifies this process by allowing you to map your types into a common interface.
 
 ## Example
 
